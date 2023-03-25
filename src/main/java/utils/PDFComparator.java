@@ -1,7 +1,6 @@
 package utils;
 
 import java.awt.*;
-import java.awt.event.*;
 import java.io.*;
 import javax.swing.*;
 
@@ -24,19 +23,22 @@ public class PDFComparator {
 }
 
 class ComparatorFrame extends JFrame {
-    private final JTextArea leftTextArea;
-    private final JTextArea rightTextArea;
+    private final JTextPane leftTextPane;
+    private final JTextPane rightTextPane;
 
     public ComparatorFrame() {
-        setTitle("PDF Comparator");
+        setTitle("PDFText Comparator");
         setSize(800, 600);
 
-        leftTextArea = new JTextArea();
-        rightTextArea = new JTextArea();
+        leftTextPane = new JTextPane();
+        rightTextPane = new JTextPane();
+
+        leftTextPane.setContentType("text/html");
+        rightTextPane.setContentType("text/html");
 
         JPanel panel = new JPanel(new GridLayout(1, 2));
-        panel.add(new JScrollPane(leftTextArea));
-        panel.add(new JScrollPane(rightTextArea));
+        panel.add(new JScrollPane(leftTextPane));
+        panel.add(new JScrollPane(rightTextPane));
         add(panel);
 
         JMenuBar menuBar = new JMenuBar();
@@ -74,15 +76,17 @@ class ComparatorFrame extends JFrame {
 
             DiffMatchPatch dmp = new DiffMatchPatch();
             LinkedList<Diff> diffs = dmp.diff_main(text1, text2);
-//            dmp.diff_cleanupSemantic(diffs);
+            dmp.diffCleanupSemantic(diffs);
 
-            leftTextArea.setText(addLineNumbers(formatDifferences(diffs, true)));
-            rightTextArea.setText(addLineNumbers(formatDifferences(diffs, false)));
+            leftTextPane.setText(addLineNumbers(formatDifferences(diffs, true)));
+            rightTextPane.setText(addLineNumbers(formatDifferences(diffs, false)));
         }
     }
 
         private String formatDifferences(List<Diff> diffs, boolean left) {
             StringBuilder result = new StringBuilder();
+            result.append("<html><body>");
+
             for (Diff diff : diffs) {
                 switch (diff.operation) {
                     case EQUAL:
@@ -90,20 +94,22 @@ class ComparatorFrame extends JFrame {
                         break;
                     case INSERT:
                         if (!left) {
-                            result.append("\033[32m"); // Set text color to green
+                            result.append("<span style='background-color: #ccffcc;'>");
                             result.append(diff.text);
-                            result.append("\033[0m"); // Reset text color
+                            result.append("</span>");
                         }
                         break;
                     case DELETE:
                         if (left) {
-                            result.append("\033[31m"); // Set text color to red
+                            result.append("<span style='background-color: #ffcccc;'>");
                             result.append(diff.text);
-                            result.append("\033[0m"); // Reset text color
+                            result.append("</span>");
                         }
                         break;
                 }
             }
+
+            result.append("</body></html>");
             return result.toString();
     }
 
@@ -111,7 +117,9 @@ class ComparatorFrame extends JFrame {
         StringBuilder result = new StringBuilder();
         String[] lines = text.split("\n");
         for (int i = 0; i < lines.length; i++) {
+            result.append("<br>");
             result.append(String.format("%d: %s%n", i + 1, lines[i]));
+            result.append("</br>");
         }
         return result.toString();
     }
