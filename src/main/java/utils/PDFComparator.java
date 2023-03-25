@@ -4,8 +4,14 @@ import java.awt.*;
 import java.awt.event.*;
 import java.io.*;
 import javax.swing.*;
+
+import fun.mike.dmp.Diff;
+import fun.mike.dmp.DiffMatchPatch;
 import org.apache.pdfbox.pdmodel.*;
 import org.apache.pdfbox.text.PDFTextStripper;
+
+import java.util.LinkedList;
+import java.util.List;
 
 public class PDFComparator {
     public static void main(String[] args) {
@@ -66,13 +72,39 @@ class ComparatorFrame extends JFrame {
             String text1 = stripper.getText(doc1);
             String text2 = stripper.getText(doc2);
 
-            leftTextArea.setText(addLineNumbers(text1));
-            rightTextArea.setText(addLineNumbers(text2));
+            DiffMatchPatch dmp = new DiffMatchPatch();
+            LinkedList<Diff> diffs = dmp.diff_main(text1, text2);
+//            dmp.diff_cleanupSemantic(diffs);
 
-            // Additional code to highlight differences can be added here.
-            // Consider using a library like google-diff-match-patch (https://github.com/google/diff-match-patch)
-            // to compare the texts and highlight the differences.
+            leftTextArea.setText(addLineNumbers(formatDifferences(diffs, true)));
+            rightTextArea.setText(addLineNumbers(formatDifferences(diffs, false)));
         }
+    }
+
+        private String formatDifferences(List<Diff> diffs, boolean left) {
+            StringBuilder result = new StringBuilder();
+            for (Diff diff : diffs) {
+                switch (diff.operation) {
+                    case EQUAL:
+                        result.append(diff.text);
+                        break;
+                    case INSERT:
+                        if (!left) {
+                            result.append("\033[32m"); // Set text color to green
+                            result.append(diff.text);
+                            result.append("\033[0m"); // Reset text color
+                        }
+                        break;
+                    case DELETE:
+                        if (left) {
+                            result.append("\033[31m"); // Set text color to red
+                            result.append(diff.text);
+                            result.append("\033[0m"); // Reset text color
+                        }
+                        break;
+                }
+            }
+            return result.toString();
     }
 
     private String addLineNumbers(String text) {
