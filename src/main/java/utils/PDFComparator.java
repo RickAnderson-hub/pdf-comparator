@@ -27,7 +27,7 @@ class ComparatorFrame extends JFrame {
     private final JTextPane rightTextPane;
 
     public ComparatorFrame() {
-        setTitle("PDFText Comparator");
+        setTitle("PDF Text Comparator");
         setSize(800, 600);
 
         leftTextPane = new JTextPane();
