@@ -94,14 +94,14 @@ class ComparatorFrame extends JFrame {
                         break;
                     case INSERT:
                         if (!left) {
-                            result.append("<span style='background-color: #ccffcc;'>");
+                            result.append("<span style='background-color: #f5424b'>");
                             result.append(diff.text);
                             result.append("</span>");
                         }
                         break;
                     case DELETE:
                         if (left) {
-                            result.append("<span style='background-color: #ffcccc;'>");
+                            result.append("<span style='background-color: #f5424b;'>");
                             result.append(diff.text);
                             result.append("</span>");
                         }
