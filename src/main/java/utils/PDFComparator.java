@@ -104,6 +104,7 @@ class ComparatorFrame extends JFrame {
             for (Diff diff : diffs) {
                 switch (diff.operation) {
                     case EQUAL:
+                        //TODO: check for italicized text.  If Italics, format yellow
                         result.append(diff.text);
                         break;
                     case INSERT:
