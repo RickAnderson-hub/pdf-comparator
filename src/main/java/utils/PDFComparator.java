@@ -25,6 +25,8 @@ public class PDFComparator {
 class ComparatorFrame extends JFrame {
     private final JTextPane leftTextPane;
     private final JTextPane rightTextPane;
+    private final JLabel leftFileLabel;
+    private final JLabel rightFileLabel;
 
     public ComparatorFrame() {
         setTitle("PDF Text Comparator");
@@ -36,9 +38,12 @@ class ComparatorFrame extends JFrame {
         leftTextPane.setContentType("text/html");
         rightTextPane.setContentType("text/html");
 
+        leftFileLabel = new JLabel();
+        rightFileLabel = new JLabel();
+
         JPanel panel = new JPanel(new GridLayout(1, 2));
-        panel.add(new JScrollPane(leftTextPane));
-        panel.add(new JScrollPane(rightTextPane));
+        panel.add(createScrollPaneWithLabel(leftTextPane, leftFileLabel));
+        panel.add(createScrollPaneWithLabel(rightTextPane, rightFileLabel));
         add(panel);
 
         JMenuBar menuBar = new JMenuBar();
@@ -68,6 +73,13 @@ class ComparatorFrame extends JFrame {
         fileMenu.add(openMenuItem);
     }
 
+    private JPanel createScrollPaneWithLabel(JTextPane textPane, JLabel label) {
+        JPanel panel = new JPanel(new BorderLayout());
+        panel.add(label, BorderLayout.NORTH);
+        panel.add(new JScrollPane(textPane), BorderLayout.CENTER);
+        return panel;
+    }
+
     private void comparePDFs(File file1, File file2) throws IOException {
         try (PDDocument doc1 = PDDocument.load(file1); PDDocument doc2 = PDDocument.load(file2)) {
             PDFTextStripper stripper = new PDFTextStripper();
@@ -78,6 +90,8 @@ class ComparatorFrame extends JFrame {
             LinkedList<Diff> diffs = dmp.diff_main(text1, text2);
             dmp.diffCleanupSemantic(diffs);
 
+            leftFileLabel.setText(file1.getName());
+            rightFileLabel.setText(file2.getName());
             leftTextPane.setText(addLineNumbers(formatDifferences(diffs, true)));
             rightTextPane.setText(addLineNumbers(formatDifferences(diffs, false)));
         }
