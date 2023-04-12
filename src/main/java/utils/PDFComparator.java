@@ -3,6 +3,8 @@ package utils;
 import java.awt.*;
 import java.io.*;
 import javax.swing.*;
+import javax.swing.JButton;
+
 
 import fun.mike.dmp.Diff;
 import fun.mike.dmp.DiffMatchPatch;
@@ -32,6 +34,14 @@ class ComparatorFrame extends JFrame {
         setTitle("PDF Text Comparator");
         setSize(800, 600);
 
+        // create the dashboard panel with two buttons
+        JPanel dashboardPanel = new JPanel(new GridLayout(1, 2));
+        JButton compareButton = new JButton("Compare PDF's");
+        JButton italicButton = new JButton("Find Italic Text");
+        dashboardPanel.add(compareButton);
+        dashboardPanel.add(italicButton);
+
+        // create the text panes and file labels
         leftTextPane = new JTextPane();
         rightTextPane = new JTextPane();
 
@@ -41,11 +51,16 @@ class ComparatorFrame extends JFrame {
         leftFileLabel = new JLabel();
         rightFileLabel = new JLabel();
 
-        JPanel panel = new JPanel(new GridLayout(1, 2));
-        panel.add(createScrollPaneWithLabel(leftTextPane, leftFileLabel));
-        panel.add(createScrollPaneWithLabel(rightTextPane, rightFileLabel));
-        add(panel);
+        // create the main panel with the dashboard panel and the text panels
+        JPanel mainPanel = new JPanel(new BorderLayout());
+        mainPanel.add(dashboardPanel, BorderLayout.NORTH);
+        JPanel textPanel = new JPanel(new GridLayout(1, 2));
+        textPanel.add(createScrollPaneWithLabel(leftTextPane, leftFileLabel));
+        textPanel.add(createScrollPaneWithLabel(rightTextPane, rightFileLabel));
+        mainPanel.add(textPanel, BorderLayout.CENTER);
+        add(mainPanel);
 
+        // create the file menu
         JMenuBar menuBar = new JMenuBar();
         setJMenuBar(menuBar);
         JMenu fileMenu = new JMenu("File");
@@ -71,7 +86,45 @@ class ComparatorFrame extends JFrame {
         });
 
         fileMenu.add(openMenuItem);
+
+        // hide the menu bar on the dashboard
+        menuBar.setVisible(false);
+
+        // add listener to the "Compare PDF's" button to open a new window with a visible menu bar
+        compareButton.addActionListener(event -> {
+            // hide the dashboard frame
+            setVisible(false);
+
+            // create new frame
+            JFrame compareFrame = new JFrame("Compare PDF's");
+            compareFrame.setSize(800, 600);
+
+            // add menu bar to new frame
+            JMenuBar compareMenuBar = new JMenuBar();
+            compareFrame.setJMenuBar(compareMenuBar);
+
+            // create "Return to Dashboard" menu item
+            JMenuItem dashboardMenuItem = new JMenuItem("Return to Dashboard");
+            dashboardMenuItem.addActionListener(e -> {
+                compareFrame.dispose();
+                setVisible(true);
+            });
+
+            // create "Compare PDF's" menu item (disabled)
+            JMenuItem compareMenuItem = new JMenuItem("Compare PDF's");
+            compareMenuItem.setEnabled(false);
+
+            // add menu items to menu bar
+            JMenu compareMenu = new JMenu("File");
+            compareMenu.add(dashboardMenuItem);
+            compareMenu.add(compareMenuItem);
+            compareMenuBar.add(compareMenu);
+
+            compareFrame.setVisible(true);
+        });
+
     }
+
 
     private JPanel createScrollPaneWithLabel(JTextPane textPane, JLabel label) {
         JPanel panel = new JPanel(new BorderLayout());
@@ -104,7 +157,6 @@ class ComparatorFrame extends JFrame {
             for (Diff diff : diffs) {
                 switch (diff.operation) {
                     case EQUAL:
-                        //TODO: check for italicized text.  If Italics, format yellow
                         result.append(diff.text);
                         break;
                     case INSERT:
