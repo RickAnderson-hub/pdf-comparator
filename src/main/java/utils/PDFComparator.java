@@ -28,13 +28,14 @@ public class PDFComparator {
 class ComparatorFrame extends JFrame {
     private final JTextPane leftTextPane = new JTextPane();
     private final JTextPane rightTextPane = new JTextPane();
+    private final JTextPane singleTextPane = new JTextPane();
+    private final JLabel singlePaneLabel = new JLabel();
     private final JLabel leftFileLabel = new JLabel();
     private final JLabel rightFileLabel = new JLabel();
 
     public ComparatorFrame() {
         setTitle("PDF Text Comparator");
         setSize(800, 600);
-
         JPanel dashboardPanel = createDashboardPanel();
         JPanel mainPanel = new JPanel(new BorderLayout());
         mainPanel.add(dashboardPanel, BorderLayout.CENTER);
@@ -45,7 +46,27 @@ class ComparatorFrame extends JFrame {
         JPanel dashboardPanel = new JPanel(new GridBagLayout());
         JButton compareButton = new JButton("Compare PDF's");
         JButton italicButton = new JButton("Find italic Text");
+        GridBagConstraints constraints = setGridBag(dashboardPanel, compareButton);
+        dashboardPanel.add(italicButton, constraints);
+        compareButton.addActionListener(event -> showComparePdfPanel(dashboardPanel));
+        italicButton.addActionListener(event -> showItalicPdfPanel(dashboardPanel));
+        return dashboardPanel;
+    }
 
+    private void showItalicPdfPanel(JPanel dashboardPanel) {
+        dashboardPanel.setVisible(false);
+        JPanel mainPanel = (JPanel) getContentPane();
+        JPanel pdfComparePanel = createItalicPdfPanel();
+        mainPanel.add(pdfComparePanel, BorderLayout.CENTER);
+        mainPanel.revalidate();
+        mainPanel.repaint();
+        JMenuBar menuBar = createItalicMenuBar();
+        setJMenuBar(menuBar);
+        menuBar.setVisible(true);
+        openSinglePDF();
+    }
+
+    private GridBagConstraints setGridBag(JPanel dashboardPanel, JButton compareButton) {
         GridBagConstraints constraints = new GridBagConstraints();
         constraints.gridx = 0;
         constraints.gridy = 0;
@@ -53,55 +74,46 @@ class ComparatorFrame extends JFrame {
         constraints.weighty = 1;
         constraints.fill = GridBagConstraints.BOTH;
         dashboardPanel.add(compareButton, constraints);
-
         constraints.gridx = 1;
         constraints.gridy = 0;
         constraints.weightx = 1;
         constraints.weighty = 1;
         constraints.fill = GridBagConstraints.BOTH;
-
-        // Add padding to the dashboard panel
         int panelPadding = 100;
         dashboardPanel.setBorder(BorderFactory.createEmptyBorder(panelPadding, panelPadding, panelPadding, panelPadding));
-
-        // Add padding between the buttons
-        int paddingBetweenButtons = 50; // Adjust this value to change the padding size between buttons
+        int paddingBetweenButtons = 50;
         constraints.insets = new Insets(0, paddingBetweenButtons, 0, 0);
-        dashboardPanel.add(italicButton, constraints);
+        return constraints;
+    }
 
-        compareButton.addActionListener(event -> {
-            dashboardPanel.setVisible(false);
-            // Show the text panel and menu
-            JPanel mainPanel = (JPanel) getContentPane();
-            JPanel pdfComparePanel = createPDFComparePanel();
-            mainPanel.add(pdfComparePanel, BorderLayout.CENTER);
-            mainPanel.revalidate();
-            mainPanel.repaint();
-
-            JMenuBar menuBar = createMenuBar();
-            setJMenuBar(menuBar);
-            menuBar.setVisible(true);
-        });
-
-        italicButton.addActionListener(event -> {
-            dashboardPanel.setVisible(false);
-            JPanel mainPanel = (JPanel) getContentPane();
-            openSinglePDF();
-        });
-
-        return dashboardPanel;
+    private void showComparePdfPanel(JPanel dashboardPanel) {
+        dashboardPanel.setVisible(false);
+        JPanel mainPanel = (JPanel) getContentPane();
+        JPanel pdfComparePanel = createPDFComparePanel();
+        mainPanel.add(pdfComparePanel, BorderLayout.CENTER);
+        mainPanel.revalidate();
+        mainPanel.repaint();
+        JMenuBar menuBar = createPdfMenuBar();
+        setJMenuBar(menuBar);
+        menuBar.setVisible(true);
     }
 
     private void openSinglePDF() {
         JFileChooser fileChooser = new JFileChooser();
-        fileChooser.setFileFilter(new FileNameExtensionFilter("PDF Files", "pdf"));
+        fileChooser.setMultiSelectionEnabled(false);
+        FileNameExtensionFilter pdfFilter = new FileNameExtensionFilter("PDF Files", "pdf");
+        fileChooser.setFileFilter(pdfFilter);
         int result = fileChooser.showOpenDialog(this);
         if (result == JFileChooser.APPROVE_OPTION) {
             File selectedFile = fileChooser.getSelectedFile();
-            // Process the selected file (e.g., display it, find italic text, etc.)
+            try (PDDocument doc = PDDocument.load(selectedFile)){
+                PDFTextStripper stripper = new PDFTextStripper();
+                String pdfText = stripper.getText(doc);
+            } catch (IOException e) {
+                JOptionPane.showMessageDialog(this, "Error reading PDF file", "Error", JOptionPane.ERROR_MESSAGE);
+            }
         }
     }
-
 
     private JPanel createPDFComparePanel() {
         leftTextPane.setContentType("text/html");
@@ -109,51 +121,67 @@ class ComparatorFrame extends JFrame {
         JPanel textPanel = new JPanel(new GridLayout(1, 2));
         textPanel.add(createScrollPaneWithLabel(leftTextPane, leftFileLabel));
         textPanel.add(createScrollPaneWithLabel(rightTextPane, rightFileLabel));
-
         return textPanel;
     }
 
-    private JMenuBar createMenuBar() {
+    private JPanel createItalicPdfPanel() {
+        singleTextPane.setContentType("text/html");
+        JPanel textPanel = new JPanel(new GridLayout(1, 1));
+        textPanel.add(createScrollPaneWithLabel(singleTextPane, singlePaneLabel));
+        return textPanel;
+    }
+
+    private JMenuBar createPdfMenuBar() {
         JMenuBar menuBar = new JMenuBar();
         JMenu fileMenu = new JMenu("File");
         menuBar.add(fileMenu);
         JMenuItem openMenuItem = new JMenuItem("Open PDF Files");
-        openMenuItem.addActionListener(event -> {
-            JFileChooser fileChooser = new JFileChooser();
-            fileChooser.setMultiSelectionEnabled(true);
-            int result = fileChooser.showOpenDialog(this);
-            if (result == JFileChooser.APPROVE_OPTION) {
-                File[] selectedFiles = fileChooser.getSelectedFiles();
-                if (selectedFiles.length == 2) {
-                    try {
-                        comparePDFs(selectedFiles[0], selectedFiles[1]);
-                    } catch (IOException e) {
-                        JOptionPane.showMessageDialog(this, "Error reading PDF files", "Error", JOptionPane.ERROR_MESSAGE);
-                    }
-                } else {
-                    JOptionPane.showMessageDialog(this, "Please select two PDF files", "Error", JOptionPane.ERROR_MESSAGE);
-                }
-            }
-        });
+        openMenuItem.addActionListener(event -> choose2Pdfs());
         fileMenu.add(openMenuItem);
-
         JMenuItem returnToDashboardMenuItem = new JMenuItem("Return to Dashboard");
-        returnToDashboardMenuItem.addActionListener(event -> {
-            // Remove the text panel and menu
-            JPanel mainPanel = (JPanel) getContentPane();
-            mainPanel.removeAll();
-            // Show the dashboard panel
-            JPanel dashboardPanel = createDashboardPanel();
-            mainPanel.add(dashboardPanel, BorderLayout.CENTER);
-            mainPanel.revalidate();
-            mainPanel.repaint();
-            // Hide the menu bar
-            setJMenuBar(null);
-        });
-
+        returnToDashboardMenuItem.addActionListener(event -> showDashboard());
         fileMenu.add(returnToDashboardMenuItem);
-
         return menuBar;
+    }
+
+    private JMenuBar createItalicMenuBar() {
+        JMenuBar menuBar = new JMenuBar();
+        JMenu fileMenu = new JMenu("Menu");
+        menuBar.add(fileMenu);
+        JMenuItem returnToDashboardMenuItem = new JMenuItem("Return to Dashboard");
+        returnToDashboardMenuItem.addActionListener(event -> showDashboard());
+        fileMenu.add(returnToDashboardMenuItem);
+        return menuBar;
+    }
+
+    private void showDashboard() {
+        JPanel mainPanel = (JPanel) getContentPane();
+        mainPanel.removeAll();
+        JPanel dashboardPanel = createDashboardPanel();
+        mainPanel.add(dashboardPanel, BorderLayout.CENTER);
+        mainPanel.revalidate();
+        mainPanel.repaint();
+        setJMenuBar(null);
+    }
+
+    private void choose2Pdfs() {
+        JFileChooser fileChooser = new JFileChooser();
+        fileChooser.setMultiSelectionEnabled(true);
+        FileNameExtensionFilter pdfFilter = new FileNameExtensionFilter("PDF Files", "pdf");
+        fileChooser.setFileFilter(pdfFilter);
+        int result = fileChooser.showOpenDialog(this);
+        if (result == JFileChooser.APPROVE_OPTION) {
+            File[] selectedFiles = fileChooser.getSelectedFiles();
+            if (selectedFiles.length == 2) {
+                try {
+                    comparePDFs(selectedFiles[0], selectedFiles[1]);
+                } catch (IOException e) {
+                    JOptionPane.showMessageDialog(this, "Error reading PDF files", "Error", JOptionPane.ERROR_MESSAGE);
+                }
+            } else {
+                JOptionPane.showMessageDialog(this, "Please select two PDF files", "Error", JOptionPane.ERROR_MESSAGE);
+            }
+        }
     }
 
     private JPanel createScrollPaneWithLabel(JTextPane textPane, JLabel label) {
@@ -175,12 +203,12 @@ class ComparatorFrame extends JFrame {
 
             leftFileLabel.setText(file1.getName());
             rightFileLabel.setText(file2.getName());
-            leftTextPane.setText(addLineNumbers(formatDifferences(diffs, true)));
-            rightTextPane.setText(addLineNumbers(formatDifferences(diffs, false)));
+            leftTextPane.setText(addLineNumbers(formatPdfContentDifferences(diffs, true)));
+            rightTextPane.setText(addLineNumbers(formatPdfContentDifferences(diffs, false)));
         }
     }
 
-    private String formatDifferences(List<Diff> diffs, boolean left) {
+    private String formatPdfContentDifferences(List<Diff> diffs, boolean left) {
         StringBuilder result = new StringBuilder();
         result.append("<html><body>");
 
