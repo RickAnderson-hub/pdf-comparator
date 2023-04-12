@@ -25,47 +25,83 @@ public class PDFComparator {
 }
 
 class ComparatorFrame extends JFrame {
-    private final JTextPane leftTextPane;
-    private final JTextPane rightTextPane;
-    private final JLabel leftFileLabel;
-    private final JLabel rightFileLabel;
+    private final JTextPane leftTextPane = new JTextPane();
+    private final JTextPane rightTextPane = new JTextPane();
+    private final JLabel leftFileLabel = new JLabel();
+    private final JLabel rightFileLabel = new JLabel();
 
     public ComparatorFrame() {
         setTitle("PDF Text Comparator");
         setSize(800, 600);
 
-        // create the dashboard panel with two buttons
-        JPanel dashboardPanel = new JPanel(new GridLayout(1, 2));
+        JPanel dashboardPanel = createDashboardPanel();
+        JPanel mainPanel = new JPanel(new BorderLayout());
+        mainPanel.add(dashboardPanel, BorderLayout.CENTER);
+        add(mainPanel);
+    }
+
+    private JPanel createDashboardPanel() {
+        JPanel dashboardPanel = new JPanel(new GridBagLayout());
         JButton compareButton = new JButton("Compare PDF's");
         JButton italicButton = new JButton("Find Italic Text");
-        dashboardPanel.add(compareButton);
-        dashboardPanel.add(italicButton);
 
-        // create the text panes and file labels
-        leftTextPane = new JTextPane();
-        rightTextPane = new JTextPane();
+        GridBagConstraints constraints = new GridBagConstraints();
+        constraints.gridx = 0;
+        constraints.gridy = 0;
+        constraints.weightx = 1;
+        constraints.weighty = 1;
+        constraints.fill = GridBagConstraints.BOTH;
+        dashboardPanel.add(compareButton, constraints);
 
+        constraints.gridx = 1;
+        constraints.gridy = 0;
+        constraints.weightx = 1;
+        constraints.weighty = 1;
+        constraints.fill = GridBagConstraints.BOTH;
+
+        // Add padding to the dashboard panel
+        int panelPadding = 100;
+        dashboardPanel.setBorder(BorderFactory.createEmptyBorder(panelPadding, panelPadding, panelPadding, panelPadding));
+
+        // Add padding between the buttons
+        int paddingBetweenButtons = 50; // Adjust this value to change the padding size between buttons
+        constraints.insets = new Insets(0, paddingBetweenButtons, 0, 0);
+        dashboardPanel.add(italicButton, constraints);
+
+        // Add ActionListener to the compareButton
+        compareButton.addActionListener(event -> {
+            // Hide the dashboard panel
+            dashboardPanel.setVisible(false);
+
+            // Show the text panel and menu
+            JPanel mainPanel = (JPanel) getContentPane();
+            JPanel pdfComparePanel = createPDFComparePanel();
+            mainPanel.add(pdfComparePanel, BorderLayout.CENTER);
+            mainPanel.revalidate();
+            mainPanel.repaint();
+
+            JMenuBar menuBar = createMenuBar();
+            setJMenuBar(menuBar);
+            menuBar.setVisible(true);
+        });
+
+        return dashboardPanel;
+    }
+
+    private JPanel createPDFComparePanel() {
         leftTextPane.setContentType("text/html");
         rightTextPane.setContentType("text/html");
-
-        leftFileLabel = new JLabel();
-        rightFileLabel = new JLabel();
-
-        // create the main panel with the dashboard panel and the text panels
-        JPanel mainPanel = new JPanel(new BorderLayout());
-        mainPanel.add(dashboardPanel, BorderLayout.NORTH);
         JPanel textPanel = new JPanel(new GridLayout(1, 2));
         textPanel.add(createScrollPaneWithLabel(leftTextPane, leftFileLabel));
         textPanel.add(createScrollPaneWithLabel(rightTextPane, rightFileLabel));
-        mainPanel.add(textPanel, BorderLayout.CENTER);
-        add(mainPanel);
 
-        // create the file menu
+        return textPanel;
+    }
+
+    private JMenuBar createMenuBar() {
         JMenuBar menuBar = new JMenuBar();
-        setJMenuBar(menuBar);
         JMenu fileMenu = new JMenu("File");
         menuBar.add(fileMenu);
-
         JMenuItem openMenuItem = new JMenuItem("Open PDF Files");
         openMenuItem.addActionListener(event -> {
             JFileChooser fileChooser = new JFileChooser();
@@ -84,47 +120,26 @@ class ComparatorFrame extends JFrame {
                 }
             }
         });
-
         fileMenu.add(openMenuItem);
 
-        // hide the menu bar on the dashboard
-        menuBar.setVisible(false);
-
-        // add listener to the "Compare PDF's" button to open a new window with a visible menu bar
-        compareButton.addActionListener(event -> {
-            // hide the dashboard frame
-            setVisible(false);
-
-            // create new frame
-            JFrame compareFrame = new JFrame("Compare PDF's");
-            compareFrame.setSize(800, 600);
-
-            // add menu bar to new frame
-            JMenuBar compareMenuBar = new JMenuBar();
-            compareFrame.setJMenuBar(compareMenuBar);
-
-            // create "Return to Dashboard" menu item
-            JMenuItem dashboardMenuItem = new JMenuItem("Return to Dashboard");
-            dashboardMenuItem.addActionListener(e -> {
-                compareFrame.dispose();
-                setVisible(true);
-            });
-
-            // create "Compare PDF's" menu item (disabled)
-            JMenuItem compareMenuItem = new JMenuItem("Compare PDF's");
-            compareMenuItem.setEnabled(false);
-
-            // add menu items to menu bar
-            JMenu compareMenu = new JMenu("File");
-            compareMenu.add(dashboardMenuItem);
-            compareMenu.add(compareMenuItem);
-            compareMenuBar.add(compareMenu);
-
-            compareFrame.setVisible(true);
+        JMenuItem returnToDashboardMenuItem = new JMenuItem("Return to Dashboard");
+        returnToDashboardMenuItem.addActionListener(event -> {
+            // Remove the text panel and menu
+            JPanel mainPanel = (JPanel) getContentPane();
+            mainPanel.removeAll();
+            // Show the dashboard panel
+            JPanel dashboardPanel = createDashboardPanel();
+            mainPanel.add(dashboardPanel, BorderLayout.CENTER);
+            mainPanel.revalidate();
+            mainPanel.repaint();
+            // Hide the menu bar
+            setJMenuBar(null);
         });
 
-    }
+        fileMenu.add(returnToDashboardMenuItem);
 
+        return menuBar;
+    }
 
     private JPanel createScrollPaneWithLabel(JTextPane textPane, JLabel label) {
         JPanel panel = new JPanel(new BorderLayout());
@@ -150,34 +165,34 @@ class ComparatorFrame extends JFrame {
         }
     }
 
-        private String formatDifferences(List<Diff> diffs, boolean left) {
-            StringBuilder result = new StringBuilder();
-            result.append("<html><body>");
+    private String formatDifferences(List<Diff> diffs, boolean left) {
+        StringBuilder result = new StringBuilder();
+        result.append("<html><body>");
 
-            for (Diff diff : diffs) {
-                switch (diff.operation) {
-                    case EQUAL:
+        for (Diff diff : diffs) {
+            switch (diff.operation) {
+                case EQUAL:
+                    result.append(diff.text);
+                    break;
+                case INSERT:
+                    if (!left) {
+                        result.append("<span style='background-color: #f5424b'>");
                         result.append(diff.text);
-                        break;
-                    case INSERT:
-                        if (!left) {
-                            result.append("<span style='background-color: #f5424b'>");
-                            result.append(diff.text);
-                            result.append("</span>");
-                        }
-                        break;
-                    case DELETE:
-                        if (left) {
-                            result.append("<span style='background-color: #f5424b;'>");
-                            result.append(diff.text);
-                            result.append("</span>");
-                        }
-                        break;
-                }
+                        result.append("</span>");
+                    }
+                    break;
+                case DELETE:
+                    if (left) {
+                        result.append("<span style='background-color: #f5424b;'>");
+                        result.append(diff.text);
+                        result.append("</span>");
+                    }
+                    break;
             }
+        }
 
-            result.append("</body></html>");
-            return result.toString();
+        result.append("</body></html>");
+        return result.toString();
     }
 
     private String addLineNumbers(String text) {
