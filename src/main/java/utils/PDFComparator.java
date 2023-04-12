@@ -4,6 +4,7 @@ import java.awt.*;
 import java.io.*;
 import javax.swing.*;
 import javax.swing.JButton;
+import javax.swing.filechooser.FileNameExtensionFilter;
 
 
 import fun.mike.dmp.Diff;
@@ -43,7 +44,7 @@ class ComparatorFrame extends JFrame {
     private JPanel createDashboardPanel() {
         JPanel dashboardPanel = new JPanel(new GridBagLayout());
         JButton compareButton = new JButton("Compare PDF's");
-        JButton italicButton = new JButton("Find Italic Text");
+        JButton italicButton = new JButton("Find italic Text");
 
         GridBagConstraints constraints = new GridBagConstraints();
         constraints.gridx = 0;
@@ -68,11 +69,8 @@ class ComparatorFrame extends JFrame {
         constraints.insets = new Insets(0, paddingBetweenButtons, 0, 0);
         dashboardPanel.add(italicButton, constraints);
 
-        // Add ActionListener to the compareButton
         compareButton.addActionListener(event -> {
-            // Hide the dashboard panel
             dashboardPanel.setVisible(false);
-
             // Show the text panel and menu
             JPanel mainPanel = (JPanel) getContentPane();
             JPanel pdfComparePanel = createPDFComparePanel();
@@ -85,8 +83,25 @@ class ComparatorFrame extends JFrame {
             menuBar.setVisible(true);
         });
 
+        italicButton.addActionListener(event -> {
+            dashboardPanel.setVisible(false);
+            JPanel mainPanel = (JPanel) getContentPane();
+            openSinglePDF();
+        });
+
         return dashboardPanel;
     }
+
+    private void openSinglePDF() {
+        JFileChooser fileChooser = new JFileChooser();
+        fileChooser.setFileFilter(new FileNameExtensionFilter("PDF Files", "pdf"));
+        int result = fileChooser.showOpenDialog(this);
+        if (result == JFileChooser.APPROVE_OPTION) {
+            File selectedFile = fileChooser.getSelectedFile();
+            // Process the selected file (e.g., display it, find italic text, etc.)
+        }
+    }
+
 
     private JPanel createPDFComparePanel() {
         leftTextPane.setContentType("text/html");
