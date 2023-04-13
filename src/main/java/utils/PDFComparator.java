@@ -10,7 +10,10 @@ import javax.swing.filechooser.FileNameExtensionFilter;
 import fun.mike.dmp.Diff;
 import fun.mike.dmp.DiffMatchPatch;
 import org.apache.pdfbox.pdmodel.*;
+import org.apache.pdfbox.pdmodel.font.PDFont;
+import org.apache.pdfbox.pdmodel.font.PDFontDescriptor;
 import org.apache.pdfbox.text.PDFTextStripper;
+import org.apache.pdfbox.text.TextPosition;
 
 import java.util.LinkedList;
 import java.util.List;
@@ -66,14 +69,14 @@ class ComparatorFrame extends JFrame {
         openSinglePDF();
     }
 
-    private GridBagConstraints setGridBag(JPanel dashboardPanel, JButton compareButton) {
+    private GridBagConstraints setGridBag(JPanel dashboardPanel, JButton button) {
         GridBagConstraints constraints = new GridBagConstraints();
         constraints.gridx = 0;
         constraints.gridy = 0;
         constraints.weightx = 1;
         constraints.weighty = 1;
         constraints.fill = GridBagConstraints.BOTH;
-        dashboardPanel.add(compareButton, constraints);
+        dashboardPanel.add(button, constraints);
         constraints.gridx = 1;
         constraints.gridy = 0;
         constraints.weightx = 1;
@@ -106,9 +109,41 @@ class ComparatorFrame extends JFrame {
         int result = fileChooser.showOpenDialog(this);
         if (result == JFileChooser.APPROVE_OPTION) {
             File selectedFile = fileChooser.getSelectedFile();
-            try (PDDocument doc = PDDocument.load(selectedFile)){
-                PDFTextStripper stripper = new PDFTextStripper();
+            try (PDDocument doc = PDDocument.load(selectedFile)) {
+                PDFTextStripper stripper = new PDFTextStripper() {
+                    private int lineNumber = 1;
+                    @Override
+                    protected void writeLineSeparator() throws IOException {
+                        writeString("<br>" + lineNumber + ": </br>");
+                        lineNumber++;
+                        super.writeLineSeparator();
+                    }
+                    @Override
+                    protected void processTextPosition(TextPosition text) {
+                        PDFont font = text.getFont();
+                        PDFontDescriptor descriptor = font.getFontDescriptor();
+                        boolean isItalic = descriptor != null && descriptor.isItalic();
+                        if (isItalic) {
+                            try {
+                                writeString("<span style='background-color: #FFA500'>");
+                            } catch (IOException e) {
+                                e.printStackTrace();
+                            }
+                        }
+                        super.processTextPosition(text);
+                        if (isItalic) {
+                            try {
+                                writeString("</span>");
+                            } catch (IOException e) {
+                                e.printStackTrace();
+                            }
+                        }
+                    }
+                };
                 String pdfText = stripper.getText(doc);
+                singlePaneLabel.setText(selectedFile.getName());
+                singleTextPane.setContentType("text/html");
+                singleTextPane.setText("<html><body>" + pdfText + "</body></html>");
             } catch (IOException e) {
                 JOptionPane.showMessageDialog(this, "Error reading PDF file", "Error", JOptionPane.ERROR_MESSAGE);
             }
