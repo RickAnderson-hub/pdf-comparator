@@ -35,9 +35,11 @@ class ComparatorFrame extends JFrame {
     private final JLabel singlePaneLabel = new JLabel();
     private final JLabel leftFileLabel = new JLabel();
     private final JLabel rightFileLabel = new JLabel();
+    private final String openingTag = "<span style='background-color: #FFA500'>";
+    private final String closingTag = "</span>";
 
     public ComparatorFrame() {
-        setTitle("PDF Text Comparator");
+        setTitle("Smarties PDF Tools");
         setSize(800, 600);
         JPanel dashboardPanel = createDashboardPanel();
         JPanel mainPanel = new JPanel(new BorderLayout());
@@ -127,9 +129,9 @@ class ComparatorFrame extends JFrame {
                         boolean isItalic = descriptor != null && descriptor.isItalic();
                         if (isItalic) {
                             try {
-                                writeString("<span style='background-color: #FFA500'>");
+                                writeString(openingTag);
                                 writeString(text.toString());
-                                writeString("</span>");
+                                writeString(closingTag);
                             } catch (IOException e) {
                                 e.printStackTrace();
                             }
@@ -181,6 +183,9 @@ class ComparatorFrame extends JFrame {
         JMenuBar menuBar = new JMenuBar();
         JMenu fileMenu = new JMenu("Menu");
         menuBar.add(fileMenu);
+        JMenuItem italicMenuItem = new JMenuItem("Check for italics");
+        italicMenuItem.addActionListener(event -> openSinglePDF());
+        fileMenu.add(italicMenuItem);
         JMenuItem returnToDashboardMenuItem = new JMenuItem("Return to Dashboard");
         returnToDashboardMenuItem.addActionListener(event -> showDashboard());
         fileMenu.add(returnToDashboardMenuItem);
