@@ -2,6 +2,7 @@ package utils;
 
 import java.awt.*;
 import java.io.*;
+import javax.imageio.ImageIO;
 import javax.swing.*;
 import javax.swing.JButton;
 import javax.swing.filechooser.FileNameExtensionFilter;
@@ -37,8 +38,14 @@ class ComparatorFrame extends JFrame {
     private final JLabel rightFileLabel = new JLabel();
     private final String openingTag = "<span style='background-color: #FFA500'>";
     private final String closingTag = "</span>";
+    private Image backgroundImage;
 
     public ComparatorFrame() {
+        try {
+            backgroundImage = ImageIO.read(getClass().getResourceAsStream("/wallpaper.jpg"));
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
         setTitle("Smarties PDF Tools");
         setSize(800, 600);
         JPanel dashboardPanel = createDashboardPanel();
@@ -48,7 +55,15 @@ class ComparatorFrame extends JFrame {
     }
 
     private JPanel createDashboardPanel() {
-        JPanel dashboardPanel = new JPanel(new GridBagLayout());
+        JPanel dashboardPanel = new JPanel(new GridBagLayout()) {
+            @Override
+            protected void paintComponent(Graphics g) {
+                super.paintComponent(g);
+                if (backgroundImage != null) {
+                    g.drawImage(backgroundImage, 0, 0, this.getWidth(), this.getHeight(), this);
+                }
+            }
+        };
         JButton compareButton = new JButton("Compare PDF's");
         JButton italicButton = new JButton("Find italic Text");
         GridBagConstraints constraints = setGridBag(dashboardPanel, compareButton);
@@ -153,7 +168,15 @@ class ComparatorFrame extends JFrame {
     private JPanel createPDFComparePanel() {
         leftTextPane.setContentType("text/html");
         rightTextPane.setContentType("text/html");
-        JPanel textPanel = new JPanel(new GridLayout(1, 2));
+        JPanel textPanel = new JPanel(new GridLayout(1, 2)) {
+            @Override
+            protected void paintComponent(Graphics g) {
+                super.paintComponent(g);
+                if (backgroundImage != null) {
+                    g.drawImage(backgroundImage, 0, 0, this.getWidth(), this.getHeight(), this);
+                }
+            }
+        };
         textPanel.add(createScrollPaneWithLabel(leftTextPane, leftFileLabel));
         textPanel.add(createScrollPaneWithLabel(rightTextPane, rightFileLabel));
         return textPanel;
@@ -161,7 +184,15 @@ class ComparatorFrame extends JFrame {
 
     private JPanel createItalicPdfPanel() {
         singleTextPane.setContentType("text/html");
-        JPanel textPanel = new JPanel(new GridLayout(1, 1));
+        JPanel textPanel = new JPanel(new GridLayout(1, 1)) {
+            @Override
+            protected void paintComponent(Graphics g) {
+                super.paintComponent(g);
+                if (backgroundImage != null) {
+                    g.drawImage(backgroundImage, 0, 0, this.getWidth(), this.getHeight(), this);
+                }
+            }
+        };
         textPanel.add(createScrollPaneWithLabel(singleTextPane, singlePaneLabel));
         return textPanel;
     }
