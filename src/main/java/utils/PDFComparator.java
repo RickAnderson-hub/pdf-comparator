@@ -112,12 +112,14 @@ class ComparatorFrame extends JFrame {
             try (PDDocument doc = PDDocument.load(selectedFile)) {
                 PDFTextStripper stripper = new PDFTextStripper() {
                     private int lineNumber = 1;
+
                     @Override
                     protected void writeLineSeparator() throws IOException {
                         writeString("<br>" + lineNumber + ": </br>");
                         lineNumber++;
                         super.writeLineSeparator();
                     }
+
                     @Override
                     protected void processTextPosition(TextPosition text) {
                         PDFont font = text.getFont();
@@ -126,17 +128,13 @@ class ComparatorFrame extends JFrame {
                         if (isItalic) {
                             try {
                                 writeString("<span style='background-color: #FFA500'>");
-                            } catch (IOException e) {
-                                e.printStackTrace();
-                            }
-                        }
-                        super.processTextPosition(text);
-                        if (isItalic) {
-                            try {
+                                writeString(text.toString());
                                 writeString("</span>");
                             } catch (IOException e) {
                                 e.printStackTrace();
                             }
+                        } else {
+                            super.processTextPosition(text);
                         }
                     }
                 };
