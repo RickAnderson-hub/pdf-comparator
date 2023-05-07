@@ -45,6 +45,7 @@ class ComparatorFrame extends JFrame {
     private final String openingTag = "<span style='background-color: #FFA500'>";
     private final String closingTag = "</span>";
     private Image backgroundImage;
+    private StringBuilder italicBuffer = new StringBuilder();
 
     /**
      * Initialize the home frame
@@ -65,6 +66,7 @@ class ComparatorFrame extends JFrame {
 
     /**
      * Loads the app version set in the pom
+     *
      * @return a String containing app.version or "unknown"
      */
     private String loadAppVersion() {
@@ -80,6 +82,7 @@ class ComparatorFrame extends JFrame {
 
     /**
      * Creates the main dashboard panel
+     *
      * @return a JPanel instance
      */
     private JPanel createDashboardPanel() {
@@ -115,6 +118,7 @@ class ComparatorFrame extends JFrame {
 
     /**
      * Shows the italics utility dash panel.  Hides the main panel.
+     *
      * @param dashboardPanel the main panel caller
      */
     private void showItalicPdfPanel(JPanel dashboardPanel) {
@@ -132,8 +136,9 @@ class ComparatorFrame extends JFrame {
 
     /**
      * sets the GridBag constraints in the main panel
+     *
      * @param dashboardPanel the main panel as caller
-     * @param button the button gui element in the main panel
+     * @param button         the button gui element in the main panel
      * @return GridBagConstraints
      */
     private GridBagConstraints setGridBag(JPanel dashboardPanel, JButton button) {
@@ -158,6 +163,7 @@ class ComparatorFrame extends JFrame {
 
     /**
      * Shows the compare PDF utility panel and hides the main panel.
+     *
      * @param dashboardPanel the main panel caller
      */
     private void showComparePdfPanel(JPanel dashboardPanel) {
@@ -205,16 +211,21 @@ class ComparatorFrame extends JFrame {
                         PDFont font = text.getFont();
                         PDFontDescriptor descriptor = font.getFontDescriptor();
                         boolean isItalic = descriptor != null && descriptor.isItalic();
-                        if (isItalic) {
-                            try {
-                                writeString(openingTag);
-                                writeString(text.toString());
-                                writeString(closingTag);//TODO: tidy this to reduce redundant HTML tags
-                            } catch (IOException e) {
-                                e.printStackTrace();
+
+                        try {
+                            if (isItalic) {
+                                italicBuffer.append(text);
+                            } else {
+                                if (italicBuffer.length() > 0) {
+                                    writeString(openingTag);
+                                    writeString(italicBuffer.toString());
+                                    writeString(closingTag);
+                                    italicBuffer.setLength(0);
+                                }
+                                super.processTextPosition(text);
                             }
-                        } else {
-                            super.processTextPosition(text);
+                        } catch (IOException e) {
+                            e.printStackTrace();
                         }
                     }
                 };
@@ -230,6 +241,7 @@ class ComparatorFrame extends JFrame {
 
     /**
      * creates the PDF compare utility panel
+     *
      * @return the JPanel
      */
     private JPanel createPDFComparePanel() {
@@ -251,6 +263,7 @@ class ComparatorFrame extends JFrame {
 
     /**
      * creates the italic utility panel
+     *
      * @return the JPanel
      */
     private JPanel createItalicPdfPanel() {
@@ -270,6 +283,7 @@ class ComparatorFrame extends JFrame {
 
     /**
      * creates the menu bar in the PDF compare panel
+     *
      * @return the JMenuBar
      */
     private JMenuBar createPdfMenuBar() {
@@ -287,6 +301,7 @@ class ComparatorFrame extends JFrame {
 
     /**
      * creates the italic finder PDF utility menu bar
+     *
      * @return the JMenuBar
      */
     private JMenuBar createItalicMenuBar() {
@@ -348,6 +363,7 @@ class ComparatorFrame extends JFrame {
     /**
      * Compares 2 PDF files and prints them out into a left and right text pane.  The diffs
      * are highlighted.  HTML is used.
+     *
      * @param file1 left PDF compare file
      * @param file2 right PDF compare file
      * @throws IOException when files can't be loaded or text can't be stripped
@@ -371,8 +387,9 @@ class ComparatorFrame extends JFrame {
 
     /**
      * The diff formatter engine
+     *
      * @param diffs received list of diffs
-     * @param left is it on the ledt hand side or not
+     * @param left  is it on the ledt hand side or not
      * @return a processed String
      */
     private String formatPdfContentDifferences(List<Diff> diffs, boolean left) {
@@ -409,6 +426,7 @@ class ComparatorFrame extends JFrame {
 
     /**
      * Adds numbered line breaks to the diff text on both panes
+     *
      * @param text the input text
      * @return the augmented String
      */
