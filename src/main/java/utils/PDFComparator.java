@@ -47,7 +47,7 @@ class ComparatorFrame extends JFrame {
         } catch (IOException e) {
             e.printStackTrace();
         }
-        setTitle("Smarties PDF Tools");
+        setTitle("Smarties Swiss Army Knife");
         setSize(800, 600);
         JPanel dashboardPanel = createDashboardPanel();
         JPanel mainPanel = new JPanel(new BorderLayout());
