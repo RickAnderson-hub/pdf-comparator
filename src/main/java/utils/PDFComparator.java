@@ -30,6 +30,11 @@ public class PDFComparator {
     }
 }
 
+/**
+ * This class currently does:
+ * 1. compares 2 PDFs and highlights the diffs
+ * 2. checks a PDF for italic text and highlights it
+ */
 class ComparatorFrame extends JFrame {
     private final JTextPane leftTextPane = new JTextPane();
     private final JTextPane rightTextPane = new JTextPane();
@@ -41,6 +46,9 @@ class ComparatorFrame extends JFrame {
     private final String closingTag = "</span>";
     private Image backgroundImage;
 
+    /**
+     * Initialize the home frame
+     */
     public ComparatorFrame() {
         try {
             backgroundImage = ImageIO.read(getClass().getResourceAsStream("/wallpaper.jpg"));
@@ -55,6 +63,10 @@ class ComparatorFrame extends JFrame {
         add(mainPanel);
     }
 
+    /**
+     * Loads the app version set in the pom
+     * @return a String containing app.version or "unknown"
+     */
     private String loadAppVersion() {
         Properties properties = new Properties();
         try (InputStream inputStream = getClass().getClassLoader().getResourceAsStream("version.properties")) {
@@ -66,6 +78,10 @@ class ComparatorFrame extends JFrame {
         }
     }
 
+    /**
+     * Creates the main dashboard panel
+     * @return a JPanel instance
+     */
     private JPanel createDashboardPanel() {
         String appVersion = loadAppVersion();
         JPanel dashboardPanel = new JPanel(new GridBagLayout()) {
@@ -97,6 +113,10 @@ class ComparatorFrame extends JFrame {
         return dashboardPanel;
     }
 
+    /**
+     * Shows the italics utility dash panel.  Hides the main panel.
+     * @param dashboardPanel the main panel caller
+     */
     private void showItalicPdfPanel(JPanel dashboardPanel) {
         dashboardPanel.setVisible(false);
         JPanel mainPanel = (JPanel) getContentPane();
@@ -110,6 +130,12 @@ class ComparatorFrame extends JFrame {
         openSinglePDF();
     }
 
+    /**
+     * sets the GridBag constraints in the main panel
+     * @param dashboardPanel the main panel as caller
+     * @param button the button gui element in the main panel
+     * @return GridBagConstraints
+     */
     private GridBagConstraints setGridBag(JPanel dashboardPanel, JButton button) {
         GridBagConstraints constraints = new GridBagConstraints();
         constraints.gridx = 0;
@@ -130,6 +156,10 @@ class ComparatorFrame extends JFrame {
         return constraints;
     }
 
+    /**
+     * Shows the compare PDF utility panel and hides the main panel.
+     * @param dashboardPanel the main panel caller
+     */
     private void showComparePdfPanel(JPanel dashboardPanel) {
         dashboardPanel.setVisible(false);
         JPanel mainPanel = (JPanel) getContentPane();
@@ -142,6 +172,10 @@ class ComparatorFrame extends JFrame {
         menuBar.setVisible(true);
     }
 
+    /**
+     * Opens a dialogue to pick 1 and only 1 PDF file to check for italic text and highlight
+     * any if found.
+     */
     private void openSinglePDF() {
         JFileChooser fileChooser = new JFileChooser();
         fileChooser.setMultiSelectionEnabled(false);
@@ -161,6 +195,11 @@ class ComparatorFrame extends JFrame {
                         super.writeLineSeparator();
                     }
 
+                    /**
+                     * Overrides the processTextPosition method.  If an italic is found, wrap the text
+                     * with a span CSS, else call super.
+                     * @param text the current TextPosition element
+                     */
                     @Override
                     protected void processTextPosition(TextPosition text) {
                         PDFont font = text.getFont();
@@ -170,7 +209,7 @@ class ComparatorFrame extends JFrame {
                             try {
                                 writeString(openingTag);
                                 writeString(text.toString());
-                                writeString(closingTag);
+                                writeString(closingTag);//TODO: tidy this to reduce redundant HTML tags
                             } catch (IOException e) {
                                 e.printStackTrace();
                             }
@@ -189,6 +228,10 @@ class ComparatorFrame extends JFrame {
         }
     }
 
+    /**
+     * creates the PDF compare utility panel
+     * @return the JPanel
+     */
     private JPanel createPDFComparePanel() {
         leftTextPane.setContentType("text/html");
         rightTextPane.setContentType("text/html");
@@ -206,6 +249,10 @@ class ComparatorFrame extends JFrame {
         return textPanel;
     }
 
+    /**
+     * creates the italic utility panel
+     * @return the JPanel
+     */
     private JPanel createItalicPdfPanel() {
         singleTextPane.setContentType("text/html");
         JPanel textPanel = new JPanel(new GridLayout(1, 1)) {
@@ -221,6 +268,10 @@ class ComparatorFrame extends JFrame {
         return textPanel;
     }
 
+    /**
+     * creates the menu bar in the PDF compare panel
+     * @return the JMenuBar
+     */
     private JMenuBar createPdfMenuBar() {
         JMenuBar menuBar = new JMenuBar();
         JMenu fileMenu = new JMenu("File");
@@ -234,6 +285,10 @@ class ComparatorFrame extends JFrame {
         return menuBar;
     }
 
+    /**
+     * creates the italic finder PDF utility menu bar
+     * @return the JMenuBar
+     */
     private JMenuBar createItalicMenuBar() {
         JMenuBar menuBar = new JMenuBar();
         JMenu fileMenu = new JMenu("Menu");
@@ -247,6 +302,9 @@ class ComparatorFrame extends JFrame {
         return menuBar;
     }
 
+    /**
+     * Shows the main dashboard
+     */
     private void showDashboard() {
         JPanel mainPanel = (JPanel) getContentPane();
         mainPanel.removeAll();
@@ -257,6 +315,9 @@ class ComparatorFrame extends JFrame {
         setJMenuBar(null);
     }
 
+    /**
+     * Selects 2 and only 2 PDF files to compare and highlight the diffs.
+     */
     private void choose2Pdfs() {
         JFileChooser fileChooser = new JFileChooser();
         fileChooser.setMultiSelectionEnabled(true);
@@ -284,6 +345,13 @@ class ComparatorFrame extends JFrame {
         return panel;
     }
 
+    /**
+     * Compares 2 PDF files and prints them out into a left and right text pane.  The diffs
+     * are highlighted.  HTML is used.
+     * @param file1 left PDF compare file
+     * @param file2 right PDF compare file
+     * @throws IOException when files can't be loaded or text can't be stripped
+     */
     private void comparePDFs(File file1, File file2) throws IOException {
         try (PDDocument doc1 = PDDocument.load(file1); PDDocument doc2 = PDDocument.load(file2)) {
             PDFTextStripper stripper = new PDFTextStripper();
@@ -301,7 +369,15 @@ class ComparatorFrame extends JFrame {
         }
     }
 
+    /**
+     * The diff formatter engine
+     * @param diffs received list of diffs
+     * @param left is it on the ledt hand side or not
+     * @return a processed String
+     */
     private String formatPdfContentDifferences(List<Diff> diffs, boolean left) {
+        final String diffColour = "<span style='background-color: #f5424b'>";
+        final String span = "</span>";
         StringBuilder result = new StringBuilder();
         result.append("<html><body>");
 
@@ -312,16 +388,16 @@ class ComparatorFrame extends JFrame {
                     break;
                 case INSERT:
                     if (!left) {
-                        result.append("<span style='background-color: #f5424b'>");
+                        result.append(diffColour);
                         result.append(diff.text);
-                        result.append("</span>");
+                        result.append(span);
                     }
                     break;
                 case DELETE:
                     if (left) {
-                        result.append("<span style='background-color: #f5424b;'>");
+                        result.append(diffColour);
                         result.append(diff.text);
-                        result.append("</span>");
+                        result.append(span);
                     }
                     break;
             }
@@ -331,6 +407,11 @@ class ComparatorFrame extends JFrame {
         return result.toString();
     }
 
+    /**
+     * Adds numbered line breaks to the diff text on both panes
+     * @param text the input text
+     * @return the augmented String
+     */
     private String addLineNumbers(String text) {
         StringBuilder result = new StringBuilder();
         String[] lines = text.split("\n");
