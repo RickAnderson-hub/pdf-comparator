@@ -18,6 +18,7 @@ import org.apache.pdfbox.text.TextPosition;
 
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Properties;
 
 public class PDFComparator {
     public static void main(String[] args) {
@@ -54,7 +55,19 @@ class ComparatorFrame extends JFrame {
         add(mainPanel);
     }
 
+    private String loadAppVersion() {
+        Properties properties = new Properties();
+        try (InputStream inputStream = getClass().getClassLoader().getResourceAsStream("version.properties")) {
+            properties.load(inputStream);
+            return properties.getProperty("app.version");
+        } catch (IOException e) {
+            e.printStackTrace();
+            return "unknown";
+        }
+    }
+
     private JPanel createDashboardPanel() {
+        String appVersion = loadAppVersion();
         JPanel dashboardPanel = new JPanel(new GridBagLayout()) {
             @Override
             protected void paintComponent(Graphics g) {
@@ -62,6 +75,17 @@ class ComparatorFrame extends JFrame {
                 if (backgroundImage != null) {
                     g.drawImage(backgroundImage, 0, 0, this.getWidth(), this.getHeight(), this);
                 }
+                int paddingRight = 10;
+                int paddingBottom = 10;
+                int textWidth = g.getFontMetrics().stringWidth("ver " + appVersion);
+                int textHeight = g.getFontMetrics().getHeight();
+                int rectX = this.getWidth() - textWidth - paddingRight;
+                int rectY = this.getHeight() - textHeight - paddingBottom;
+                g.setColor(Color.WHITE);
+                g.fillRect(rectX, rectY, textWidth, textHeight);
+                g.setColor(Color.BLACK);
+                int textY = rectY + (textHeight - g.getFontMetrics().getAscent()) / 2 + g.getFontMetrics().getAscent();
+                g.drawString("ver " + appVersion, rectX, textY);
             }
         };
         JButton compareButton = new JButton("Compare PDF's");
