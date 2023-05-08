@@ -228,6 +228,16 @@ class ComparatorFrame extends JFrame {
                             e.printStackTrace();
                         }
                     }
+                    @Override
+                    public void endPage(PDPage page) throws IOException {
+                        if (italicBuffer.length() > 0) {
+                            writeString(openingTag);
+                            writeString(italicBuffer.toString());
+                            writeString(closingTag);
+                            italicBuffer.setLength(0);
+                        }
+                        super.endPage(page);
+                    }
                 };
                 String pdfText = stripper.getText(doc);
                 singlePaneLabel.setText(selectedFile.getName());
