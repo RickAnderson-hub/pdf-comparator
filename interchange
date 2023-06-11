@@ -1,0 +1,78 @@
+import React, { useState } from 'react';
+
+function App() {
+  const [pdfs, setPdfs] = useState([]);
+  const [diffs, setDiffs] = useState(null);
+
+  const handleFileChange = (event) => {
+    if (event.target.files.length !== 2) {
+      alert('Please select exactly 2 PDF files.');
+      return;
+    }
+    setPdfs(Array.from(event.target.files));
+  };
+
+  const handleCompareClick = () => {
+    // TODO: Implement PDF comparison logic here
+    // For now, we'll just set some dummy data
+    setDiffs(['Difference 1', 'Difference 2']);
+  };
+
+  return (
+    <div>
+      <h1>Dashboard</h1>
+      <div>
+        <button onClick={() => document.getElementById('fileInput').click()}>
+          Compare 2 PDFs
+        </button>
+        <input
+          id="fileInput"
+          type="file"
+          accept="application/pdf"
+          multiple
+          onChange={handleFileChange}
+          style={{ display: 'none' }}
+        />
+        {pdfs.length === 2 && (
+          <button onClick={handleCompareClick}>Compare</button>
+        )}
+      </div>
+      {diffs && (
+        <div style={{ display: 'flex' }}>
+          <div style={{ flex: 1 }}>{diffs[0]}</div>
+          <div style={{ flex: 1 }}>{diffs[1]}</div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+export default App;
+
+
+
+import pdfjsLib from 'pdfjs-dist';
+
+async function getPdfText(file) {
+  const reader = new FileReader();
+  const data = await new Promise((resolve) => {
+    reader.onload = (event) => resolve(event.target.result);
+    reader.readAsArrayBuffer(file);
+  });
+  const pdf = await pdfjsLib.getDocument(data).promise;
+  let text = '';
+  for (let i = 1; i <= pdf.numPages; i++) {
+    const page = await pdf.getPage(i);
+    const content = await page.getTextContent();
+    text += content.items.map((item) => item.str).join(' ');
+  }
+  return text;
+}
+
+async function comparePdfs(pdfs) {
+  const [text1, text2] = await Promise.all(pdfs.map(getPdfText));
+  // TODO: Implement more sophisticated comparison logic here
+  // For now, we'll just do a simple string comparison
+  return [text1 === text2 ? 'No differences' : 'Differences found'];
+}
+
