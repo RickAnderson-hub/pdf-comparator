@@ -28,7 +28,7 @@
         </includes>
       </resource>
     </resources>
-    <finalName>Smarties Swiss Army Knife ${version}</finalName>
+    <finalName>Smarties Swiss Army Knife ${project.version}</finalName>
     <plugins>
       <plugin>
         <artifactId>maven-shade-plugin</artifactId>
