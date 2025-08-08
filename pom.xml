@@ -36,11 +36,29 @@
     </dependencies>
 
     <build>
-        <finalName>Smarties Swiss Army Knife ${version}</finalName>
+        <finalName>Smarties Swiss Army Knife ${project.version}</finalName>
         <resources>
             <resource>
                 <directory>src/main/resources</directory>
                 <filtering>true</filtering>
+                <excludes>
+                    <exclude>**/*.pdf</exclude>
+                    <exclude>**/*.ttf</exclude>
+                    <exclude>**/*.jpg</exclude>
+                    <exclude>**/*.jpeg</exclude>
+                    <exclude>**/*.png</exclude>
+                </excludes>
+            </resource>
+            <resource>
+                <directory>src/main/resources</directory>
+                <filtering>false</filtering>
+                <includes>
+                    <include>**/*.pdf</include>
+                    <include>**/*.ttf</include>
+                    <include>**/*.jpg</include>
+                    <include>**/*.jpeg</include>
+                    <include>**/*.png</include>
+                </includes>
             </resource>
         </resources>
         <plugins>

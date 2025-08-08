@@ -1,0 +1,58 @@
+name: Renovate Auto-merge
+
+on:
+  pull_request:
+    branches: [ main, master ]
+
+jobs:
+  auto-merge:
+    if: github.actor == 'renovate[bot]'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+      checks: read
+      
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Set up JDK 8
+      uses: actions/setup-java@v4
+      with:
+        java-version: '8'
+        distribution: 'temurin'
+        
+    - name: Cache Maven dependencies
+      uses: actions/cache@v4
+      with:
+        path: ~/.m2
+        key: ${{ runner.os }}-m2-${{ hashFiles('**/pom.xml') }}
+        restore-keys: ${{ runner.os }}-m2
+        
+    - name: Run tests
+      run: mvn clean test
+      
+    - name: Build project
+      run: mvn clean compile package
+      
+    - name: Check if PR is ready for auto-merge
+      id: check-pr
+      run: |
+        # Check if all required checks have passed
+        echo "All checks passed, proceeding with auto-merge"
+        echo "ready=true" >> $GITHUB_OUTPUT
+        
+    - name: Auto-merge renovate PR
+      if: steps.check-pr.outputs.ready == 'true'
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      run: |
+        gh pr merge ${{ github.event.pull_request.number }} --auto --squash
+        
+    - name: Comment on failure
+      if: failure()
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      run: |
+        gh pr comment ${{ github.event.pull_request.number }} --body "❌ Auto-merge failed. CI checks did not pass. Please review manually."

@@ -11,6 +11,7 @@ import javax.swing.filechooser.FileNameExtensionFilter;
 import fun.mike.dmp.Diff;
 import fun.mike.dmp.DiffMatchPatch;
 import org.apache.pdfbox.pdmodel.*;
+import org.apache.pdfbox.Loader;
 import org.apache.pdfbox.pdmodel.font.PDFont;
 import org.apache.pdfbox.pdmodel.font.PDFontDescriptor;
 import org.apache.pdfbox.text.PDFTextStripper;
@@ -190,7 +191,7 @@ class ComparatorFrame extends JFrame {
         int result = fileChooser.showOpenDialog(this);
         if (result == JFileChooser.APPROVE_OPTION) {
             File selectedFile = fileChooser.getSelectedFile();
-            try (PDDocument doc = PDDocument.load(selectedFile)) {
+            try (PDDocument doc = Loader.loadPDF(selectedFile)) {
                 PDFTextStripper stripper = new PDFTextStripper() {
                     private int lineNumber = 1;
 
@@ -379,7 +380,7 @@ class ComparatorFrame extends JFrame {
      * @throws IOException when files can't be loaded or text can't be stripped
      */
     private void comparePDFs(File file1, File file2) throws IOException {
-        try (PDDocument doc1 = PDDocument.load(file1); PDDocument doc2 = PDDocument.load(file2)) {
+        try (PDDocument doc1 = Loader.loadPDF(file1); PDDocument doc2 = Loader.loadPDF(file2)) {
             PDFTextStripper stripper = new PDFTextStripper();
             String text1 = stripper.getText(doc1);
             String text2 = stripper.getText(doc2);

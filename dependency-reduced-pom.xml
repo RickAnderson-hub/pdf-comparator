@@ -9,13 +9,30 @@
       <resource>
         <filtering>true</filtering>
         <directory>src/main/resources</directory>
+        <excludes>
+          <exclude>**/*.pdf</exclude>
+          <exclude>**/*.ttf</exclude>
+          <exclude>**/*.jpg</exclude>
+          <exclude>**/*.jpeg</exclude>
+          <exclude>**/*.png</exclude>
+        </excludes>
+      </resource>
+      <resource>
+        <directory>src/main/resources</directory>
+        <includes>
+          <include>**/*.pdf</include>
+          <include>**/*.ttf</include>
+          <include>**/*.jpg</include>
+          <include>**/*.jpeg</include>
+          <include>**/*.png</include>
+        </includes>
       </resource>
     </resources>
-    <finalName>Smarties Swiss Army Knife ${version}</finalName>
+    <finalName>Smarties Swiss Army Knife ${project.version}</finalName>
     <plugins>
       <plugin>
         <artifactId>maven-shade-plugin</artifactId>
-        <version>3.2.4</version>
+        <version>3.6.0</version>
         <executions>
           <execution>
             <phase>package</phase>
@@ -34,11 +51,11 @@
       </plugin>
       <plugin>
         <artifactId>maven-compiler-plugin</artifactId>
-        <version>3.8.1</version>
+        <version>3.14.0</version>
       </plugin>
       <plugin>
         <artifactId>maven-jar-plugin</artifactId>
-        <version>3.2.0</version>
+        <version>3.4.2</version>
         <configuration>
           <archive>
             <manifest>
